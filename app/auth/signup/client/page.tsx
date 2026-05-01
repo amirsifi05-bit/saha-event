@@ -1,0 +1,249 @@
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Loader2 } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
+import { z } from 'zod'
+
+import { AuthCard } from '@/components/auth/AuthCard'
+import { PasswordInput } from '@/components/auth/PasswordInput'
+import { WilayaField } from '@/components/auth/WilayaField'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { formatSignupError } from '@/lib/auth/auth-errors'
+import { createClient } from '@/lib/supabase/client'
+import { cn } from '@/lib/utils'
+
+const schema = z
+  .object({
+    full_name: z.string().min(2, 'Full name must be at least 2 characters'),
+    email: z.string().email('Please enter a valid email address'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirm: z.string(),
+    phone: z
+      .string()
+      .transform((s) => s.trim())
+      .refine((s) => s === '' || s.length >= 9, {
+        message: 'Please enter a valid phone number',
+      }),
+    wilaya: z.string().min(1, 'Please select your wilaya'),
+  })
+  .refine((d) => d.password === d.confirm, {
+    message: 'Passwords do not match',
+    path: ['confirm'],
+  })
+
+type FormValues = z.infer<typeof schema>
+
+export default function ClientSignupPage() {
+  const router = useRouter()
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      full_name: '',
+      email: '',
+      password: '',
+      confirm: '',
+      phone: '',
+      wilaya: '',
+    },
+  })
+
+  const wilaya = watch('wilaya')
+
+  async function onSubmit(values: FormValues) {
+    setSubmitError(null)
+    const supabase = createClient()
+
+    const { data, error } = await supabase.auth.signUp({
+      email: values.email,
+      password: values.password,
+      options: {
+        data: {
+          role: 'client',
+          full_name: values.full_name,
+        },
+      },
+    })
+
+    if (error) {
+      setSubmitError(formatSignupError(error.message))
+      return
+    }
+
+    if (data.user) {
+      const phoneValue = values.phone.trim() === '' ? null : values.phone.trim()
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ phone: phoneValue, wilaya: values.wilaya })
+        .eq('id', data.user.id)
+
+      if (updateError) {
+        setSubmitError(updateError.message)
+        return
+      }
+    }
+
+    toast.success('Account created! Welcome to Saha-Event.')
+    router.push('/client/dashboard')
+  }
+
+  const disabled = isSubmitting
+
+  return (
+    <AuthCard>
+      <Link
+        href="/auth/signup"
+        className="inline-flex items-center text-sm text-[#1A1A2E] font-medium hover:underline transition-colors duration-150 mb-6"
+      >
+        ← Back
+      </Link>
+
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-[#1A1A2E]">Create your account</h1>
+        <p className="text-sm text-[#6B7280] mt-1">Find and book the perfect event hall</p>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <div>
+          <Label
+            htmlFor="full_name"
+            className="text-[13px] font-medium text-[#374151] mb-1.5 block"
+          >
+            Full name
+          </Label>
+          <Input
+            id="full_name"
+            autoComplete="name"
+            disabled={disabled}
+            placeholder="Yasmine Khelif"
+            className={cn(
+              'mt-1.5 h-11 rounded-[10px] border-[#D1D5DB] text-sm',
+              'focus-visible:border-[#1A1A2E] focus-visible:ring-2 focus-visible:ring-[#1A1A2E] focus-visible:ring-offset-2'
+            )}
+            {...register('full_name')}
+          />
+          {errors.full_name ? (
+            <p className="text-red-500 text-xs mt-1">{errors.full_name.message}</p>
+          ) : null}
+        </div>
+
+        <div>
+          <Label
+            htmlFor="email"
+            className="text-[13px] font-medium text-[#374151] mb-1.5 block"
+          >
+            Email address
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            disabled={disabled}
+            placeholder="you@example.com"
+            className={cn(
+              'mt-1.5 h-11 rounded-[10px] border-[#D1D5DB] text-sm',
+              'focus-visible:border-[#1A1A2E] focus-visible:ring-2 focus-visible:ring-[#1A1A2E] focus-visible:ring-offset-2'
+            )}
+            {...register('email')}
+          />
+          {errors.email ? (
+            <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+          ) : null}
+        </div>
+
+        <PasswordInput
+          label="Password"
+          autoComplete="new-password"
+          disabled={disabled}
+          placeholder="••••••••"
+          error={errors.password?.message}
+          {...register('password')}
+        />
+
+        <PasswordInput
+          label="Confirm password"
+          autoComplete="new-password"
+          disabled={disabled}
+          placeholder="••••••••"
+          error={errors.confirm?.message}
+          {...register('confirm')}
+        />
+
+        <div>
+          <Label
+            htmlFor="phone"
+            className="text-[13px] font-medium text-[#374151] mb-1.5 block"
+          >
+            Phone number <span className="text-[#6B7280] font-normal">(optional)</span>
+          </Label>
+          <Input
+            id="phone"
+            type="tel"
+            autoComplete="tel"
+            disabled={disabled}
+            placeholder="+213 6XX XXX XXX"
+            className={cn(
+              'mt-1.5 h-11 rounded-[10px] border-[#D1D5DB] text-sm',
+              'focus-visible:border-[#1A1A2E] focus-visible:ring-2 focus-visible:ring-[#1A1A2E] focus-visible:ring-offset-2'
+            )}
+            {...register('phone')}
+          />
+          {errors.phone ? (
+            <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
+          ) : null}
+        </div>
+
+        <WilayaField
+          id="wilaya"
+          value={wilaya}
+          onChange={(v) => setValue('wilaya', v, { shouldValidate: true })}
+          disabled={disabled}
+          error={errors.wilaya?.message}
+        />
+
+        {submitError ? (
+          <p className="text-red-500 text-sm text-center">{submitError}</p>
+        ) : null}
+
+        <Button
+          type="submit"
+          disabled={disabled}
+          className={cn(
+            'h-11 w-full rounded-xl font-semibold transition-all duration-150 active:scale-[0.98]',
+            'bg-[#1A1A2E] text-white hover:bg-[#2D2D4E]'
+          )}
+        >
+          {isSubmitting ? (
+            <Loader2 size={18} className="animate-spin" aria-hidden />
+          ) : (
+            'Create my account'
+          )}
+        </Button>
+      </form>
+
+      <p className="text-center text-sm text-[#6B7280] mt-8">
+        Already have an account?{' '}
+        <Link
+          href="/auth/signin"
+          className="text-[#1A1A2E] font-medium hover:underline transition-colors duration-150"
+        >
+          Sign in →
+        </Link>
+      </p>
+    </AuthCard>
+  )
+}
