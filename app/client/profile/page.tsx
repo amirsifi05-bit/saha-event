@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Lock } from 'lucide-react'
+import { Loader2, Lock } from 'lucide-react'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -11,7 +11,7 @@ import { toast } from 'sonner'
 
 import { createClient } from '@/lib/supabase/client'
 import { WILAYAS } from '@/lib/auth/wilayas'
-import { formatDate, getInitials } from '@/lib/utils'
+import { cn, formatDate, getInitials } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -90,7 +90,7 @@ export default function ProfilePage() {
         <div className="flex items-center gap-5 mb-6">
           {avatarUrl ? (
             <div className="relative w-[72px] h-[72px] rounded-full overflow-hidden">
-              <Image src={avatarUrl} alt="Avatar" fill className="object-cover" />
+              <Image src={avatarUrl} alt="Avatar" fill sizes="72px" className="object-cover" />
             </div>
           ) : (
             <div className="w-[72px] h-[72px] rounded-full bg-[#1A1A2E] text-white font-bold text-2xl flex items-center justify-center">
@@ -117,7 +117,23 @@ export default function ProfilePage() {
               <SelectContent>{WILAYAS.map((w) => <SelectItem key={w} value={w}>{w}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <Button className="bg-[#1A1A2E] hover:bg-[#2D2D4E] px-8 py-2 rounded-xl">Save changes</Button>
+          <Button
+            type="submit"
+            disabled={form.formState.isSubmitting}
+            className={cn(
+              'bg-[#1A1A2E] hover:bg-[#2D2D4E] px-8 py-2 rounded-xl transition-all active:scale-[0.98]',
+              form.formState.isSubmitting && 'opacity-70 cursor-not-allowed'
+            )}
+          >
+            {form.formState.isSubmitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 size={16} className="animate-spin" />
+                Loading...
+              </span>
+            ) : (
+              'Save changes'
+            )}
+          </Button>
         </form>
       </div>
 

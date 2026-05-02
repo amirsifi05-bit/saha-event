@@ -197,14 +197,26 @@ export default function HallDetailClient({
           <Placeholder className="rounded-2xl cursor-default" />
         ) : photos.length === 1 ? (
           <div className="relative cursor-pointer">
-            <Image src={coverPhoto.url} alt={hall.name} fill className="object-cover rounded-2xl" />
+            <Image
+              src={coverPhoto.url}
+              alt={hall.name}
+              fill
+              sizes="(max-width: 1024px) 100vw, 60vw"
+              className="object-cover rounded-2xl"
+            />
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-2 h-full cursor-pointer">
             {/* Large left image */}
             <div className="col-span-2 relative rounded-l-2xl overflow-hidden">
               {coverPhoto ? (
-                <Image src={coverPhoto.url} alt={hall.name} fill className="object-cover" />
+                <Image
+                src={coverPhoto.url}
+                alt={hall.name}
+                fill
+                sizes="(max-width: 1024px) 100vw, 60vw"
+                className="object-cover"
+              />
               ) : (
                 <Placeholder className="w-full h-full" />
               )}
@@ -214,7 +226,7 @@ export default function HallDetailClient({
               {[0, 1].map((i) => (
                 <div key={i} className="relative flex-1 overflow-hidden last:rounded-br-2xl first:rounded-tr-2xl">
                   {otherPhotos[i] ? (
-                    <Image src={otherPhotos[i].url} alt="" fill className="object-cover" />
+                    <Image src={otherPhotos[i].url} alt="" fill sizes="20vw" className="object-cover" />
                   ) : (
                     <Placeholder className="w-full h-full" />
                   )}
@@ -238,7 +250,13 @@ export default function HallDetailClient({
             <div className="grid grid-cols-2 gap-3 mt-4">
               {photos.map((photo) => (
                 <div key={photo.id} className="relative h-56 rounded-xl overflow-hidden">
-                  <Image src={photo.url} alt={photo.caption ?? hall.name} fill className="object-cover" />
+                  <Image
+                  src={photo.url}
+                  alt={photo.caption ?? hall.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 300px"
+                  className="object-cover"
+                />
                 </div>
               ))}
             </div>

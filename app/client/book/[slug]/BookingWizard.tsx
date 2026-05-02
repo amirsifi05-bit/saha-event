@@ -416,7 +416,13 @@ export default function BookingWizard({
                       <FileText size={36} className="text-[#6B7280]" />
                     ) : (
                       <div className="relative w-12 h-12 rounded-lg overflow-hidden">
-                        <Image src={URL.createObjectURL(receiptFile)} alt="Receipt preview" fill className="object-cover" />
+                        <Image
+                        src={URL.createObjectURL(receiptFile)}
+                        alt="Receipt preview"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 400px"
+                        className="object-cover"
+                      />
                       </div>
                     )}
                   </div>
@@ -486,9 +492,19 @@ export default function BookingWizard({
                   type="button"
                   disabled={!receiptUrl || isSubmitting}
                   onClick={handleSubmit}
-                  className="flex-1 ml-3 bg-[#E8B86D] text-[#1A1A2E] hover:bg-[#D4A558] rounded-xl"
+                  className={cn(
+                    'flex-1 ml-3 bg-[#E8B86D] text-[#1A1A2E] hover:bg-[#D4A558] rounded-xl transition-all active:scale-[0.98]',
+                    isSubmitting && 'opacity-70 cursor-not-allowed'
+                  )}
                 >
-                  {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : 'Confirm booking'}
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 size={16} className="animate-spin" />
+                      Loading...
+                    </span>
+                  ) : (
+                    'Confirm booking'
+                  )}
                 </Button>
               </div>
             </div>
@@ -498,7 +514,13 @@ export default function BookingWizard({
         <aside className="w-[320px] hidden lg:block sticky top-36 bg-white border border-[#E5E7EB] rounded-2xl p-5">
           <div className="relative h-28 rounded-xl overflow-hidden">
             {cover ? (
-              <Image src={cover} alt={hall.name} fill className="object-cover" />
+              <Image
+              src={cover}
+              alt={hall.name}
+              fill
+              sizes="(max-width: 768px) 100vw, 300px"
+              className="object-cover"
+            />
             ) : (
               <div className="h-full w-full bg-gradient-to-br from-[#1A1A2E] to-[#2D2D4E] flex items-center justify-center text-white/40">
                 {getInitials(hall.name)}

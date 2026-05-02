@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -8,6 +9,7 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
 import { createClient } from '@/lib/supabase/client'
+import { cn } from '@/lib/utils'
 import { PasswordInput } from '@/components/auth/PasswordInput'
 import { Button } from '@/components/ui/button'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
@@ -58,7 +60,23 @@ export default function SecurityPage() {
           <PasswordInput label="New password" placeholder="New password" {...form.register('newPassword')} />
           <PasswordInput label="Confirm password" placeholder="Confirm new password" {...form.register('confirmPassword')} />
           {inlineError ? <p className="text-sm text-red-600">{inlineError}</p> : null}
-          <Button className="bg-[#1A1A2E] hover:bg-[#2D2D4E] px-8 rounded-xl">Update password</Button>
+          <Button
+            type="submit"
+            disabled={form.formState.isSubmitting}
+            className={cn(
+              'bg-[#1A1A2E] hover:bg-[#2D2D4E] px-8 rounded-xl transition-all active:scale-[0.98]',
+              form.formState.isSubmitting && 'opacity-70 cursor-not-allowed'
+            )}
+          >
+            {form.formState.isSubmitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 size={16} className="animate-spin" />
+                Loading...
+              </span>
+            ) : (
+              'Update password'
+            )}
+          </Button>
         </form>
       </div>
 

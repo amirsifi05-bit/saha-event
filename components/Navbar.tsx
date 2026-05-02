@@ -51,33 +51,37 @@ export default function Navbar() {
     ]
   }, [pathname, profile?.role])
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) {
-        setProfile(null)
-        setHasUnread(false)
-        return
-      }
-      const { data } = await supabase
-        .from("users")
-        .select("role, full_name, avatar_url")
-        .eq("id", user.id)
-        .single()
-      setProfile((data ?? null) as Profile)
+// Find the useEffect that fetches the user and replace it with this:
+useEffect(() => {
+  const supabase = createClient()
 
-      const { count } = await supabase
-        .from("notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("is_read", false)
-      setHasUnread((count ?? 0) > 0)
+  // Fetch immediately on mount
+  const fetchUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data } = await supabase
+        .from('users')
+        .select('role, full_name, avatar_url')
+        .eq('id', user.id)
+        .single()
+      setProfile(data)
+    } else {
+      setProfile(null)
     }
-    void fetchUser()
-  }, [])
+  }
+  fetchUser()
+
+  // Also listen for auth state changes — this fires on signin/signout
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    (event, session) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        fetchUser()
+      }
+    }
+  )
+
+  return () => subscription.unsubscribe()
+}, [])
 
   async function signOut() {
     const supabase = createClient()

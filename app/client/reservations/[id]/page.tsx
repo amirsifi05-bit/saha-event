@@ -33,7 +33,9 @@ export default async function ReservationDetailPage({ params }: { params: Promis
         <div className="flex-1">
           <div className="bg-white border rounded-2xl overflow-hidden">
             <div className="relative h-40">
-              {cover ? <Image src={cover} alt={hall?.name ?? ''} fill className="object-cover" /> : <div className="h-full w-full bg-gradient-to-br from-[#1A1A2E] to-[#2D2D4E] flex items-center justify-center text-white/40 text-2xl font-bold">{getInitials(hall?.name ?? 'Hall')}</div>}
+              {cover ? (
+              <Image src={cover} alt={hall?.name ?? ''} fill sizes="(max-width: 768px) 100vw, 600px" className="object-cover" />
+            ) : <div className="h-full w-full bg-gradient-to-br from-[#1A1A2E] to-[#2D2D4E] flex items-center justify-center text-white/40 text-2xl font-bold">{getInitials(hall?.name ?? 'Hall')}</div>}
             </div>
             <div className="p-5">
               <h1 className="font-bold text-xl">{hall?.name}</h1>

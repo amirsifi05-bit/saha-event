@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
 import { ArrowRight, Heart, MapPin, Star, Users } from 'lucide-react'
 
 import { Skeleton } from '@/components/ui/skeleton'
@@ -147,11 +148,21 @@ export function HallCard({ hall, mode, checkIn, checkOut, guests }: HallCardProp
 
   if (mode === 'list') {
     return (
-      <div className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
+      <motion.div
+        whileHover={{ x: 4, boxShadow: '0 8px 32px rgba(0,0,0,0.10)' }}
+        transition={{ duration: 0.2 }}
+        className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden"
+      >
         <div className="flex flex-col md:flex-row">
           <div className="relative w-full md:w-72 flex-shrink-0 h-48 md:h-56">
             {coverUrl ? (
-              <Image src={coverUrl} alt={hall.name} fill className="object-cover" />
+              <Image
+                src={coverUrl}
+                alt={hall.name}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover"
+              />
             ) : (
               <div className="h-full w-full bg-gradient-to-br from-[#1A1A2E] to-[#2D2D4E] flex items-center justify-center">
                 <div className="text-white/30 text-6xl font-bold">{initials(hall.name)}</div>
@@ -219,15 +230,25 @@ export function HallCard({ hall, mode, checkIn, checkOut, guests }: HallCardProp
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     )
   }
 
   return (
-    <div className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden transition-transform duration-250 hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+    <motion.div
+      whileHover={{ y: -6, boxShadow: '0 16px 40px rgba(0,0,0,0.12)' }}
+      transition={{ duration: 0.2 }}
+      className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden cursor-pointer"
+    >
       <div className="relative h-52">
         {coverUrl ? (
-          <Image src={coverUrl} alt={hall.name} fill className="object-cover" />
+          <Image
+            src={coverUrl}
+            alt={hall.name}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover"
+          />
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-[#1A1A2E] to-[#2D2D4E] flex items-center justify-center">
             <div className="text-white/30 text-6xl font-bold">{initials(hall.name)}</div>
@@ -312,7 +333,7 @@ export function HallCard({ hall, mode, checkIn, checkOut, guests }: HallCardProp
           See availability
         </Link>
       </div>
-    </div>
+    </motion.div>
   )
 }
 

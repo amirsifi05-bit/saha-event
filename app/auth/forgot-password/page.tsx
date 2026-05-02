@@ -103,12 +103,16 @@ export default function ForgotPasswordPage() {
             type="submit"
             disabled={disabled}
             className={cn(
-              'h-11 w-full rounded-xl font-semibold transition-all duration-150 active:scale-[0.98]',
-              'bg-[#1A1A2E] text-white hover:bg-[#2D2D4E]'
+              'h-11 w-full rounded-xl font-semibold transition-all active:scale-[0.98]',
+              'bg-[#1A1A2E] text-white hover:bg-[#2D2D4E]',
+              isSubmitting && 'opacity-70 cursor-not-allowed'
             )}
           >
             {isSubmitting ? (
-              <Loader2 size={18} className="animate-spin" aria-hidden />
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 size={16} className="animate-spin" />
+                Loading...
+              </span>
             ) : (
               'Send reset link'
             )}

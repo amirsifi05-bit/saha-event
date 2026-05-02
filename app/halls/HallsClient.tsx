@@ -13,6 +13,15 @@ import {
 import SearchWidget from '@/components/SearchWidget'
 import { HallCard, HallCardSkeleton } from '@/components/HallCard'
 import { Button } from '@/components/ui/button'
+
+const containerVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06 } },
+}
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35 } },
+}
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -67,7 +76,7 @@ export default function HallsClient({
   initialGuests: number
   initialSort: string
 }) {
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const [mode, setMode] = useState<'list' | 'grid'>('list')
   const [sortBy, setSortBy] = useState<SortBy>(
     (initialSort as SortBy) || 'recommended'
@@ -81,7 +90,7 @@ export default function HallsClient({
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
   useEffect(() => {
-    const t = window.setTimeout(() => setLoading(false), 250)
+    const t = window.setTimeout(() => setIsLoading(false), 400)
     return () => window.clearTimeout(t)
   }, [])
 
@@ -239,7 +248,7 @@ export default function HallsClient({
               </div>
             </div>
 
-            {loading ? (
+            {isLoading ? (
               <div className={cn(mode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4')}>
                 {Array.from({ length: 4 }).map((_, i) => (
                   <HallCardSkeleton key={i} mode={mode === 'grid' ? 'grid' : 'list'} />
@@ -265,20 +274,18 @@ export default function HallsClient({
                 </div>
               </div>
             ) : (
-              <div
+              <motion.div
                 className={cn(
                   mode === 'grid'
                     ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
                     : 'space-y-4'
                 )}
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
               >
-                {filteredHalls.map((hall, index) => (
-                  <motion.div
-                    key={hall.id}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
+                {filteredHalls.map((hall) => (
+                  <motion.div key={hall.id} variants={itemVariants}>
                     <HallCard
                       hall={hall}
                       mode={mode}
@@ -288,7 +295,7 @@ export default function HallsClient({
                     />
                   </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
           </main>
         </div>

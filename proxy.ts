@@ -1,24 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const CLIENT_ROUTES = ['/client']
-const OWNER_ROUTES = ['/owner']
-const ADMIN_ROUTES = ['/admin']
-const AUTH_ROUTES = ['/auth']
-
-const AUTH_ALLOWED_WHEN_AUTHENTICATED = ['/auth/reset-password']
-
-// Changed function name from 'middleware' to 'proxy'
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request })
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
+        getAll() { return request.cookies.getAll() },
         setAll(cs) {
           cs.forEach(({ name, value, options }) => {
             request.cookies.set(name, value)
@@ -29,28 +20,35 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
   const path = request.nextUrl.pathname
 
-  const needsAuth = [...CLIENT_ROUTES, ...OWNER_ROUTES, ...ADMIN_ROUTES].some((r) =>
-    path.startsWith(r)
-  )
+  // Protect /client/*, /owner/*, /admin/* — redirect to signin if not logged in
+  const needsAuth =
+    path.startsWith('/client') || path.startsWith('/owner') || path.startsWith('/admin')
   if (needsAuth && !user) {
-    return NextResponse.redirect(new URL(`/auth/signin?redirect=${path}`, request.url))
+    const url = new URL('/auth/signin', request.url)
+    url.searchParams.set('redirect', path)
+    return NextResponse.redirect(url)
   }
 
-  const onAuthRoute = AUTH_ROUTES.some((r) => path.startsWith(r))
-  const allowedWhileAuthed = AUTH_ALLOWED_WHEN_AUTHENTICATED.some((p) => path.startsWith(p))
-  
-  if (user && onAuthRoute && !allowedWhileAuthed) {
-    const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
-    let dest = '/client/dashboard'
-    if (profile?.role === 'owner') dest = '/owner/dashboard'
-    else if (profile?.role === 'admin') dest = '/admin/dashboard'
+  // If logged in and hitting auth pages — redirect to correct dashboard
+  if (user && path.startsWith('/auth')) {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const dest =
+      profile?.role === 'owner'
+        ? '/owner/dashboard'
+        : profile?.role === 'admin'
+          ? '/admin/dashboard'
+          : '/client/dashboard'
     return NextResponse.redirect(new URL(dest, request.url))
   }
+
   return response
 }
 

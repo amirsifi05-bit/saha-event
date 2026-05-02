@@ -4,13 +4,13 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { Star } from 'lucide-react'
+import { Loader2, Star } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { getInitials } from '@/lib/utils'
+import { cn, getInitials } from '@/lib/utils'
 
 type Reservation = {
   id: string
@@ -37,6 +37,7 @@ export default function ReviewPage() {
   const [comment, setComment] = useState('')
   const [touched, setTouched] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -65,20 +66,25 @@ export default function ReviewPage() {
     if (rating === 0 || !reservation) return
     const hall = Array.isArray(reservation.event_halls) ? reservation.event_halls[0] : reservation.event_halls
     if (!hall) return
-    const supabase = createClient()
-    const { error } = await supabase.from('reviews').insert({
-      reservation_id: id,
-      client_id: userId,
-      hall_id: reservation.hall_id,
-      rating,
-      comment: comment || null,
-    })
-    if (error) {
-      toast.error(error.message)
-      return
+    setSubmitting(true)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('reviews').insert({
+        reservation_id: id,
+        client_id: userId,
+        hall_id: reservation.hall_id,
+        rating,
+        comment: comment || null,
+      })
+      if (error) {
+        toast.error(error.message)
+        return
+      }
+      toast.success('Thank you for your review!')
+      router.push('/client/reservations')
+    } finally {
+      setSubmitting(false)
     }
-    toast.success('Thank you for your review!')
-    router.push('/client/reservations')
   }
 
   if (loading) return <div className="max-w-xl mx-auto px-4 py-8 text-sm text-[#6B7280]">Loading...</div>
@@ -93,7 +99,9 @@ export default function ReviewPage() {
       <h1 className="font-bold text-2xl mt-4">Write a review</h1>
       <p className="text-[#6B7280] mt-1">{hall?.name}</p>
       <div className="h-28 w-full rounded-2xl mt-4 relative overflow-hidden">
-        {cover ? <Image src={cover} alt={hall?.name ?? ''} fill className="object-cover" /> : <div className="h-full w-full bg-gradient-to-br from-[#1A1A2E] to-[#2D2D4E] flex items-center justify-center text-white/40 text-2xl font-bold">{getInitials(hall?.name ?? 'Hall')}</div>}
+        {cover ? (
+          <Image src={cover} alt={hall?.name ?? ''} fill sizes="(max-width: 768px) 100vw, 600px" className="object-cover" />
+        ) : <div className="h-full w-full bg-gradient-to-br from-[#1A1A2E] to-[#2D2D4E] flex items-center justify-center text-white/40 text-2xl font-bold">{getInitials(hall?.name ?? 'Hall')}</div>}
       </div>
 
       <div className="mt-8">
@@ -114,8 +122,23 @@ export default function ReviewPage() {
       </div>
       {touched && rating === 0 ? <p className="text-sm text-red-600 mt-2">Please select a rating.</p> : null}
 
-      <Button onClick={submit} disabled={rating === 0} className="w-full mt-6 bg-[#E8B86D] text-[#1A1A2E] hover:bg-[#D4A558] rounded-xl">
-        Submit review
+      <Button
+        type="button"
+        onClick={submit}
+        disabled={rating === 0 || submitting}
+        className={cn(
+          'w-full mt-6 bg-[#E8B86D] text-[#1A1A2E] hover:bg-[#D4A558] rounded-xl transition-all active:scale-[0.98]',
+          submitting && 'opacity-70 cursor-not-allowed'
+        )}
+      >
+        {submitting ? (
+          <span className="flex items-center justify-center gap-2">
+            <Loader2 size={16} className="animate-spin" />
+            Loading...
+          </span>
+        ) : (
+          'Submit review'
+        )}
       </Button>
       <Link href={`/client/reservations/${id}`} className="text-sm text-[#6B7280] underline text-center block mt-3">
         Skip for now

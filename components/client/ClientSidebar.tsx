@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
 import {
   Bell,
   CalendarDays,
@@ -49,7 +50,7 @@ export default function ClientSidebar({
       <div className="flex flex-col items-start">
         {avatarUrl ? (
           <div className="relative w-12 h-12 rounded-full overflow-hidden">
-            <Image src={avatarUrl} alt={fullName} fill className="object-cover" />
+            <Image src={avatarUrl} alt={fullName} fill sizes="48px" className="object-cover" />
           </div>
         ) : (
           <div className="w-12 h-12 rounded-full bg-[#1A1A2E] text-white font-bold text-lg flex items-center justify-center">
@@ -71,21 +72,28 @@ export default function ClientSidebar({
               key={link.href}
               href={link.href}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition',
-                active
-                  ? 'bg-[#F0F0F6] text-[#1A1A2E] font-semibold'
-                  : 'text-[#4B5563] hover:bg-[#F7F8FA] hover:text-[#1A1A2E]'
+                'relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors',
+                active ? 'text-[#1A1A2E] font-semibold' : 'text-[#4B5563] hover:bg-[#F7F8FA] hover:text-[#1A1A2E]'
               )}
             >
-              <span className="relative">
-                <Icon size={20} />
-                {link.unread && link.unread > 0 ? (
-                  <span className="absolute -top-1.5 -right-2 min-w-4 h-4 rounded-full bg-red-500 text-white text-[10px] leading-4 px-1 text-center">
-                    {link.unread > 9 ? '9+' : link.unread}
-                  </span>
-                ) : null}
+              {active ? (
+                <motion.div
+                  layoutId="client-sidebar-indicator"
+                  className="absolute inset-0 bg-[#F0F0F6] rounded-xl"
+                  transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                />
+              ) : null}
+              <span className="relative z-10 flex items-center gap-3">
+                <span className="relative">
+                  <Icon size={20} />
+                  {link.unread && link.unread > 0 ? (
+                    <span className="absolute -top-1.5 -right-2 min-w-4 h-4 rounded-full bg-red-500 text-white text-[10px] leading-4 px-1 text-center">
+                      {link.unread > 9 ? '9+' : link.unread}
+                    </span>
+                  ) : null}
+                </span>
+                <span>{link.label}</span>
               </span>
-              <span>{link.label}</span>
             </Link>
           )
         })}

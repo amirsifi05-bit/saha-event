@@ -1,10 +1,11 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { CalendarDays, CalendarX, CheckCircle2, Clock, Wallet } from 'lucide-react'
+import { CalendarX } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 
 import { createClient } from '@/lib/supabase/server'
 import FadeUp from '@/components/FadeUp'
+import { ClientDashboardStats } from '@/components/client/ClientDashboardStats'
 import StatusBadge from '@/components/client/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { formatPrice, getInitials } from '@/lib/utils'
@@ -82,12 +83,12 @@ export default async function DashboardPage() {
         </h1>
         <p className="text-[#6B7280] text-sm mt-1">Here&apos;s what&apos;s happening with your bookings.</p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-          <StatCard icon={<CalendarDays size={20} className="text-[#4338CA]" />} iconBg="bg-[#EEF2FF]" value={String(stats.total)} label="Total bookings" />
-          <StatCard icon={<Clock size={20} className="text-[#D97706]" />} iconBg="bg-[#FEF3C7]" value={String(stats.upcoming)} label="Upcoming events" />
-          <StatCard icon={<CheckCircle2 size={20} className="text-[#059669]" />} iconBg="bg-[#D1FAE5]" value={String(stats.confirmed)} label="Confirmed" />
-          <StatCard icon={<Wallet size={20} className="text-[#7C3AED]" />} iconBg="bg-[#EDE9FE]" value={formatPrice(stats.totalSpent)} label="Total spent" />
-        </div>
+        <ClientDashboardStats
+          total={stats.total}
+          upcoming={stats.upcoming}
+          confirmed={stats.confirmed}
+          totalSpent={stats.totalSpent}
+        />
 
         <section className="mt-10">
           <div className="flex items-center justify-between">
@@ -109,7 +110,7 @@ export default async function DashboardPage() {
               </Link>
             </div>
           ) : (
-            <div className="flex gap-4 overflow-x-auto pb-2 mt-4">
+            <div className="flex gap-4 overflow-x-auto pb-2 mt-4 scrollbar-hide">
               {upcoming.map((r) => {
                 const hall = normalizeHall(r.event_halls)
                 if (!hall) return null
@@ -122,7 +123,13 @@ export default async function DashboardPage() {
                   >
                     <div className="relative h-32">
                       {cover ? (
-                        <Image src={cover} alt={hall.name} fill className="object-cover" />
+                        <Image
+                          src={cover}
+                          alt={hall.name}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 300px"
+                          className="object-cover"
+                        />
                       ) : (
                         <div className="h-full w-full bg-gradient-to-br from-[#1A1A2E] to-[#2D2D4E] text-white/30 text-2xl font-bold flex items-center justify-center">
                           {getInitials(hall.name)}
@@ -207,27 +214,5 @@ export default async function DashboardPage() {
         </section>
       </div>
     </FadeUp>
-  )
-}
-
-function StatCard({
-  icon,
-  iconBg,
-  value,
-  label,
-}: {
-  icon: React.ReactNode
-  iconBg: string
-  value: string
-  label: string
-}) {
-  return (
-    <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5">
-      <div className="flex items-start justify-between">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg}`}>{icon}</div>
-      </div>
-      <div className="text-3xl font-bold text-[#1A1A2E] mt-3">{value}</div>
-      <div className="text-sm text-[#6B7280] mt-1">{label}</div>
-    </div>
   )
 }
