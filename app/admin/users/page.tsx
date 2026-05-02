@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation'
 
 import AdminUsersClient, { type AdminUserRow } from './AdminUsersClient'
 import { createClient } from '@/lib/supabase/server'
-
 export default async function AdminUsersPage() {
   const supabase = await createClient()
   const {

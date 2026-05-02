@@ -62,16 +62,34 @@ export default function ProfilePage() {
 
   async function uploadAvatar(file: File) {
     const supabase = createClient()
-    const path = `${userId}/avatar`
-    const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+    
+    // Get extension from the real file type
+    const ext = file.name.split('.').pop() ?? 'jpg'
+    const path = `${userId}/avatar.${ext}`
+  
+    const { error } = await supabase.storage
+      .from('avatars')
+      .upload(path, file, { upsert: true, contentType: file.type })
+  
     if (error) return toast.error(error.message)
-    const { data } = supabase.storage.from('avatars').getPublicUrl(path)
-    const { error: updateError } = await supabase.from('users').update({ avatar_url: data.publicUrl }).eq('id', userId)
+  
+    const { data } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(path)
+  
+    // Add cache-buster so the browser shows the new photo immediately
+    const freshUrl = `${data.publicUrl}?t=${Date.now()}`
+  
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ avatar_url: freshUrl })
+      .eq('id', userId)
+  
     if (updateError) return toast.error(updateError.message)
-    setAvatarUrl(data.publicUrl)
+  
+    setAvatarUrl(freshUrl)
     toast.success('Photo updated!')
   }
-
   const submit = form.handleSubmit(async (values) => {
     const supabase = createClient()
     const { error } = await supabase.from('users').update({
