@@ -45,12 +45,14 @@ export default async function Page() {
     <div>
       {/* Section 1 — Hero */}
       <section
-        className="w-full text-center"
-        style={{
-          background:
-            'linear-gradient(135deg, #1A1A2E 0%, #2D2D4E 60%, #1A1A2E 100%)',
-        }}
-      >
+  className="w-full text-center"
+  style={{
+    backgroundImage: "linear-gradient(rgba(26, 26, 46, 0.8), rgba(26, 26, 46, 0.8)), url('/ChatGPT Image 3 mai 2026, 18_26_29.png')",
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+  }}
+>
         <div className="min-h-[500px] md:min-h-[580px] flex flex-col items-center justify-center px-4">
           <FadeUp>
             <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 border text-sm text-[#E8B86D] mb-6"
