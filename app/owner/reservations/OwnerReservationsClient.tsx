@@ -48,8 +48,10 @@ export default function OwnerReservationsClient({
     let list = items
     if (tab !== 'all') list = list.filter((r) => r.status === tab)
     const sorted = [...list]
-    if (sort === 'newest') sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    else if (sort === 'oldest') sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    if (sort === 'newest')
+      sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    else if (sort === 'oldest')
+      sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
     else sorted.sort((a, b) => a.check_in.localeCompare(b.check_in))
     return sorted
   }, [items, tab, sort])
@@ -67,9 +69,14 @@ export default function OwnerReservationsClient({
 
   async function confirmBooking(id: string) {
     const supabase = createClient()
-    const { error } = await supabase.from('reservations').update({ status: 'confirmed' }).eq('id', id)
+    const { error } = await supabase
+      .from('reservations')
+      .update({ status: 'confirmed' })
+      .eq('id', id)
     if (error) return toast.error(error.message)
-    setItems((prev) => prev.map((r) => (r.id === id ? { ...r, status: 'confirmed' as const } : r)))
+    setItems((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, status: 'confirmed' as const } : r))
+    )
     toast.success('Booking confirmed! Client has been notified.')
     router.refresh()
   }
@@ -82,7 +89,13 @@ export default function OwnerReservationsClient({
       .update({ status: 'rejected', owner_response: rejectReason.trim() || null })
       .eq('id', rejectId)
     if (error) return toast.error(error.message)
-    setItems((prev) => prev.map((r) => (r.id === rejectId ? { ...r, status: 'rejected' as const, owner_response: rejectReason } : r)))
+    setItems((prev) =>
+      prev.map((r) =>
+        r.id === rejectId
+          ? { ...r, status: 'rejected' as const, owner_response: rejectReason }
+          : r
+      )
+    )
     setRejectId(null)
     setRejectReason('')
     toast.success('Booking rejected.')
@@ -126,21 +139,30 @@ export default function OwnerReservationsClient({
           filtered.map((r) => {
             const hall = r.event_halls
             const clientName = r.users?.full_name ?? `Client ${r.client_id.slice(0, 8)}`
+            const hasReceipt = Boolean(r.receipt_url)
+
             return (
               <div
                 key={r.id}
-                className={`bg-white border border-[#E5E7EB] rounded-2xl p-5 ${r.status === 'pending' ? 'border-l-4 border-l-[#E8B86D]' : ''}`}
+                className={`bg-white border border-[#E5E7EB] rounded-2xl p-5 ${
+                  r.status === 'pending' ? 'border-l-4 border-l-[#E8B86D]' : ''
+                }`}
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <p className="font-bold text-base text-[#1A1A2E]">{hall?.name ?? 'Hall'}</p>
-                    <span className="text-xs text-[#6B7280] bg-[#F3F4F6] px-2 py-0.5 rounded mt-1 inline-block">{hall?.wilaya}</span>
+                    <span className="text-xs text-[#6B7280] bg-[#F3F4F6] px-2 py-0.5 rounded mt-1 inline-block">
+                      {hall?.wilaya}
+                    </span>
                   </div>
                   <div className="text-right">
                     <StatusBadge status={r.status} />
-                    <p className="text-xs text-[#9CA3AF] mt-1">{format(parseISO(r.created_at), 'd MMM yyyy')}</p>
+                    <p className="text-xs text-[#9CA3AF] mt-1">
+                      {format(parseISO(r.created_at), 'd MMM yyyy')}
+                    </p>
                   </div>
                 </div>
+
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-3 text-sm">
                   <div className="flex items-center gap-2">
                     <Users size={16} className="text-[#9CA3AF]" />
@@ -156,23 +178,37 @@ export default function OwnerReservationsClient({
                   </div>
                   <div className="font-bold text-[#1A1A2E]">{fmt(r.total_price)} DA</div>
                 </div>
+
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                  {/* Receipt — always route to detail page to get signed URL */}
                   <div>
-                    {r.receipt_url ? (
-                      <a href={r.receipt_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-[#1A1A2E] underline">
-                        <FileText size={16} /> View receipt
-                      </a>
+                    {hasReceipt ? (
+                      <Link
+                        href={`/owner/reservations/${r.id}`}
+                        className="inline-flex items-center gap-1.5 text-sm text-[#1A1A2E] hover:underline"
+                      >
+                        <FileText size={15} className="text-[#6B7280]" />
+                        View receipt
+                      </Link>
                     ) : (
                       <span className="text-xs text-[#9CA3AF] italic">No receipt uploaded</span>
                     )}
                   </div>
+
                   <div className="flex gap-2">
                     {r.status === 'pending' ? (
                       <>
-                        <Button variant="outline" className="border-red-200 text-red-600" onClick={() => setRejectId(r.id)}>
+                        <Button
+                          variant="outline"
+                          className="border-red-200 text-red-600 hover:bg-red-50"
+                          onClick={() => setRejectId(r.id)}
+                        >
                           Reject
                         </Button>
-                        <Button className="bg-[#E8B86D] text-[#1A1A2E] hover:bg-[#D4A558]" onClick={() => confirmBooking(r.id)}>
+                        <Button
+                          className="bg-[#E8B86D] text-[#1A1A2E] hover:bg-[#D4A558]"
+                          onClick={() => confirmBooking(r.id)}
+                        >
                           Confirm
                         </Button>
                       </>
@@ -191,6 +227,7 @@ export default function OwnerReservationsClient({
         )}
       </div>
 
+      {/* Reject dialog */}
       <Dialog open={Boolean(rejectId)} onOpenChange={(o) => !o && setRejectId(null)}>
         <DialogContent>
           <DialogHeader>
@@ -207,7 +244,7 @@ export default function OwnerReservationsClient({
             <Button variant="outline" onClick={() => setRejectId(null)}>
               Cancel
             </Button>
-            <Button className="bg-red-600 hover:bg-red-700" onClick={rejectBooking}>
+            <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={rejectBooking}>
               Reject booking
             </Button>
           </DialogFooter>
